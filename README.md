@@ -4,10 +4,6 @@
 
 ---
 
-## 🌐 Live Demo - In development...
-
----
-
 ## ✨ Features
 
 * 👤 User authentication & profiles
