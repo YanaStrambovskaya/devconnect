@@ -34,10 +34,6 @@
 
 ---
 
-## 📸 Screenshots
-
-*(Add screenshots here — this is VERY important for recruiters)*
-
 ## 🎯 Future Improvements
 
 * 💬 Real-time chat
