@@ -10,19 +10,13 @@ import {
   startAfter,
   updateDoc,
 } from "firebase/firestore";
-import type {
-  AuthUpdateData,
-  UserModel,
-  SkillsListResult,
-  Skill,
-  UserProfileEntity,
-} from "../types/types";
-import { db } from "../lib/firebase";
-import { updateProfile } from "firebase/auth";
+import type { SkillsListResult, Skill, UserBasicProfile } from "../types/types";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { db, storage } from "../lib/firebase";
 
 export async function updateUserProfileDocument(
   userId: string,
-  updateProps: Partial<UserProfileEntity>
+  updateProps: Partial<UserBasicProfile>
 ): Promise<void> {
   if (!userId) {
     throw new Error("Id is required to update user");
@@ -39,21 +33,6 @@ export async function updateUserProfileDocument(
   }
 }
 
-export async function updateUserAuthDocument(
-  auth: UserModel["auth"],
-  updateProps: AuthUpdateData
-): Promise<void> {
-  if (!auth) {
-    throw new Error("User is not passed");
-  }
-  try {
-    await updateProfile(auth, updateProps);
-  } catch (err) {
-    console.error(err);
-    throw new Error();
-  }
-}
-
 export async function getSkillesList(
   limitValue: number,
   lastDoc?: QueryDocumentSnapshot<Skill> | null
@@ -64,7 +43,7 @@ export async function getSkillesList(
       ? query(ref, startAfter(lastDoc), limit(limitValue))
       : query(ref, limit(limitValue));
     const snap = await getDocs(q);
-    console.log(snap.docs);
+    // console.log(snap.docs);
     return {
       items: snap.docs.map((doc) => ({ ...doc.data(), id: doc.id })),
       lastDoc: snap.docs.at(-1),
@@ -79,3 +58,28 @@ export async function getSkillesList(
     };
   }
 }
+
+export const uploadAvatar = async (file: File | null, userId: string) => {
+  if (!file) return null;
+  // const storage = getStorage();
+  const storageRef = ref(storage, `avatars/${userId}`);
+
+  await uploadBytes(storageRef, file);
+  return await getDownloadURL(storageRef);
+};
+
+export const uploadProjectPreview = async (
+  file: File | null,
+  userId: string,
+  projectId: string
+) => {
+  if (!file) return null;
+  // const storage = getStorage();
+  const storageRef = ref(
+    storage,
+    `users/${userId}/projects/${projectId}/preview.jpg`
+  );
+
+  await uploadBytes(storageRef, file);
+  return await getDownloadURL(storageRef);
+};

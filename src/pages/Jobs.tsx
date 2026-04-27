@@ -1,8 +1,12 @@
+import { Container } from "../components/Layout/Container";
+
 // In Development
 export default function Jobs() {
   return (
-    <>
-      <h1>Jobs</h1>
-    </>
+    <section>
+      <Container>
+        <h1 className="text-center text-7xl">Comming Soon</h1>
+      </Container>
+    </section>
   );
 }

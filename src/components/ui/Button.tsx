@@ -1,12 +1,11 @@
 import type { ComponentPropsWithoutRef, ElementType, ReactNode } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { twMerge } from "tailwind-merge";
-const space = ["rounded-md", "px-4", "py-3"];
+// const space = ["rounded-md", "px-4", "py-3"];
 export const buttonStyles = cva("cursor-pointer shrink-0", {
   variants: {
     variant: {
       primary: [
-        [...space],
         "bg-[var(--primary-color)]",
         "text-white",
         "border",
@@ -15,16 +14,24 @@ export const buttonStyles = cva("cursor-pointer shrink-0", {
         "hover:border-[var(--primary-color-hover)]",
       ],
       primaryDisabled: [
-        [...space],
         "bg-[var(--primary-color)]",
         "opacity-50",
         "cursor-not-allowed",
         "text-white",
         "border",
+        "pointer-events-none",
         "border-[var(--primary-color)]",
       ],
+      defaultDisabled: [
+        "bg-[var(--default-color)]",
+        "opacity-50",
+        "text-black",
+        "border",
+        "pointer-events-none",
+        "cursor-not-allowed",
+        "border-[var(--default-color)]",
+      ],
       default: [
-        [...space],
         "bg-[var(--default-color)]",
         "text-[var(--dark-grey)]",
         "border",
@@ -33,7 +40,6 @@ export const buttonStyles = cva("cursor-pointer shrink-0", {
         "hover:border-[var(--default-border)]",
       ],
       danger: [
-        [...space],
         "bg-[var(--danger-color)]",
         "text-white",
         "border",
@@ -43,10 +49,19 @@ export const buttonStyles = cva("cursor-pointer shrink-0", {
       ],
       icon: ["hover:bg-gray-200"],
       primaryLink: ["text-[var(--primary-color)] px-1 hover:underline"],
+      defaultLink: ["text-black px-1 hover:underline"],
+    },
+    size: {
+      xxs: ["rounded-xs", "px-1", "py-1", "text-xs"],
+      xs: ["rounded-xs", "px-2", "py-1", "text-xs"],
+      sm: ["rounded-sm", "px-3", "py-2", "text-sm"],
+      md: ["rounded-md", "px-4", "py-3", "text-md"],
+      lg: [],
     },
   },
   defaultVariants: {
     variant: "default",
+    size: "md",
   },
 });
 type Props<T extends ElementType> = {

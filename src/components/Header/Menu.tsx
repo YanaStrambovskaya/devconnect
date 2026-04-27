@@ -1,4 +1,6 @@
 import { NavLink } from "react-router-dom";
+import { useAuth } from "../../contexts/useAuth";
+import UserProfileIcon from "./UserProfileIcon";
 
 export function Menu() {
   const getItemClass = ({ isActive }: { isActive: boolean }) =>
@@ -13,8 +15,10 @@ export function Menu() {
     { path: "/projects", label: "Projects", end: true },
     { path: "/jobs", label: "Jobs", end: true },
   ];
+
+  const { currentUserEntity } = useAuth();
   return (
-    <nav className="flex gap-10 items-center">
+    <nav className="flex gap-10 items-center justify-between md:justify-end">
       {menuLinks.map((item) => (
         <NavLink
           key={item.path}
@@ -25,6 +29,7 @@ export function Menu() {
           {item.label}
         </NavLink>
       ))}
+      {currentUserEntity && <UserProfileIcon />}
     </nav>
   );
 }

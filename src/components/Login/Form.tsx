@@ -3,18 +3,20 @@ import { Input } from "../ui/Input";
 import { Label } from "../ui/Label";
 import { Button } from "../ui/Button";
 import { useAuth } from "../../contexts/useAuth";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import type { FormState, InputConfig } from "../../types/types";
 import FormGroup from "../ui/FormGroup";
+import { FormMessage } from "../FormMessage";
 
 export function Form({ inputConfig }: { inputConfig: InputConfig[] }) {
+  const { state } = useLocation();
   const [formState, setFormState] = useState<FormState>({
-    email: "",
+    email: state?.email ?? "",
     password: "",
   });
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(state?.error || "");
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -33,11 +35,12 @@ export function Form({ inputConfig }: { inputConfig: InputConfig[] }) {
       setFormState({ email: "", password: "" });
       navigate("/profile");
     } catch (err) {
+      console.error(err);
       if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError("Something went wrong.");
+        if (err.message === "Firebase: Error (auth/invalid-credential).")
+          setError("Wrong Passwor");
       }
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -46,6 +49,13 @@ export function Form({ inputConfig }: { inputConfig: InputConfig[] }) {
   return (
     <>
       <form id="registration-form" onSubmit={handleSubmit}>
+        {error ? (
+          <FormMessage variant="error" className="mb-2 text-center">
+            {error}
+          </FormMessage>
+        ) : (
+          ""
+        )}
         {inputConfig.map(({ name, id, type, label, icon }) => {
           return (
             <FormGroup key={id}>
@@ -57,7 +67,7 @@ export function Form({ inputConfig }: { inputConfig: InputConfig[] }) {
                 onChange={handleOnChange}
                 value={formState[name]}
                 icon={icon}
-                className="input-with-icon"
+                className="input-with-icon disabled:opacity-15"
               />
               <Label htmlFor={id} variant="srOnly">
                 {label}
@@ -66,7 +76,7 @@ export function Form({ inputConfig }: { inputConfig: InputConfig[] }) {
           );
         })}
         <Button
-          type="button"
+          type="submit"
           variant="primary"
           className="w-full"
           disabled={loading}
@@ -74,7 +84,6 @@ export function Form({ inputConfig }: { inputConfig: InputConfig[] }) {
           {loading ? "Loading..." : "Log In"}
         </Button>
       </form>
-      {error ? <p>{error}</p> : ""}
     </>
   );
 }

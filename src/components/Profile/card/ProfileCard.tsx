@@ -1,19 +1,16 @@
 import { useState } from "react";
 import ProfileCardEdit from "./ProfileCardEdit";
 import ProfileCardRead from "./ProfileCardRead";
-import { useCurrentUser } from "../../hooks/useCurrentUser";
-import { useAuth } from "../../contexts/useAuth";
+import { useCurrentUserEntity } from "../../../hooks/useCurrentUserEntity";
 
 export default function ProfileCard() {
   const [isEditing, setIsEditing] = useState(false);
-  const userView = useCurrentUser();
-  const { userEntity } = useAuth();
+  const userView = useCurrentUserEntity();
 
   return (
     <>
       {isEditing ? (
         <ProfileCardEdit
-          auth={userEntity!.auth}
           userView={userView}
           onEditStop={() => setIsEditing(false)}
         />

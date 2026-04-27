@@ -1,8 +1,12 @@
+import { Container } from "lucide-react";
+
 // In Development
 export default function NotFoundPage() {
   return (
-    <>
-      <h1>NotFoundPage</h1>
-    </>
+    <section>
+      <Container>
+        <h1 className="text-center text-7xl">Comming Soon</h1>
+      </Container>
+    </section>
   );
 }

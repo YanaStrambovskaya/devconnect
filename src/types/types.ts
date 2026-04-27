@@ -1,11 +1,6 @@
 import type { VariantProps } from "class-variance-authority";
-import { type User } from "firebase/auth";
-import type {
-  FieldValue,
-  QueryDocumentSnapshot,
-  Timestamp,
-} from "firebase/firestore";
-import { type HTMLInputTypeAttribute } from "react";
+import type { QueryDocumentSnapshot } from "firebase/firestore";
+import { type ComponentType, type HTMLInputTypeAttribute } from "react";
 import { type ReactNode } from "react";
 import type { buttonStyles } from "../components/ui/Button";
 
@@ -19,20 +14,18 @@ export type SkillsListResult = {
   lastDoc?: QueryDocumentSnapshot<Skill> | null;
   hasMore: boolean;
 };
-export type AuthUpdateData = {
-  displayName: string;
-  photoURL: string | null;
-};
 export type ProjectLink = {
   title: string;
   url: string;
 };
 export type Project = {
   id: string;
+  previewUrl: string;
   title: string;
   description: string;
-  technologies: string[];
-  links: ProjectLink[];
+  technologies: Skill[];
+  githubLink: string;
+  websiteLink: string;
 };
 
 export type Country = {
@@ -40,58 +33,50 @@ export type Country = {
   alt: string;
   name: string;
 };
-export type UserProfileEntity = {
-  projects: Set<Project>;
-  profession: string | null;
-  bio: string | null;
+
+export type UserBasicProfile = {
+  joinedTs: number;
+  profession: string;
+  aboutMe: string;
   country: Country | null;
-  skills: Set<Skill>;
-  joinedTs: Timestamp | FieldValue;
+  skills: Skill[];
+  projects: Project[];
+  githubLink: string;
+  socialLink1: string;
+  socialLink2: string;
+  socialLink3: string;
+  websiteLink: string;
+  linkedinLink: string;
 };
 
-export type UserProfileCardEditable = Omit<UserProfileEntity, "joinedTs">;
-export type UserModel = {
-  auth: User;
-  profile: UserProfileEntity;
-};
-
-export type CurrentUserView = {
+export type UserExtendedProfile = UserBasicProfile & {
   id: string;
   displayName: string;
-  email: string;
-  joinedTs: Timestamp | FieldValue;
-  photoURL: string | null;
-  profession: string | null;
-  bio: string | null;
-  country: Country | null;
-  skills: Set<Skill>;
-  projects: Set<Project>;
+  photoURL: string;
 };
 
+export type CurrentUserEntity = UserExtendedProfile & {
+  email: string;
+};
+
+export type UserProfileCardEditable = Omit<
+  UserExtendedProfile,
+  "joinedTs" | "id"
+>;
 export type AuthContextType = {
-  userEntity: UserModel | null;
+  currentUserEntity: UserExtendedProfile | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<UserModel | null>;
+  login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  signUp: (
-    name: string,
-    email: string,
-    password: string
-  ) => Promise<UserModel | null>;
+  deleteUser: () => Promise<void>;
+  signUp: (name: string, email: string, password: string) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   onUpdateUserProfile: (
     userId: string,
-    updateProps: UserProfileCardEditable
+    updateProps: Partial<UserProfileCardEditable>
   ) => Promise<void>;
-  onUpdateUserAuth: (
-    auth: UserModel["auth"],
-    updateProps: AuthUpdateData
-  ) => Promise<void>;
-  syncUserProfileCard: (
-    userDocData: AuthUpdateData,
-    userProfileData: UserProfileCardEditable
-  ) => void;
-  uploadAvatar: (file: File | null, userId: string) => Promise<string | null>;
+  syncUserProfile: (userProfileData: Partial<UserProfileCardEditable>) => void;
+  // uploadAvatar: (file: File | null, userId: string) => Promise<string | null>;
   handleGetSkillesList: (
     limitValue: number,
     lastDoc?: SkillsListResult["lastDoc"]
@@ -110,10 +95,43 @@ export type InputConfig = {
   icon: ReactNode;
 };
 
-export type authSwitchConfigType = {
+export type AuthSwitchConfigType = {
   className?: string;
   text?: string;
   to: string;
   linkText: string;
   variant: VariantProps<typeof buttonStyles>["variant"];
+};
+export type ProjectsViewMode = "list" | "create" | "read" | "edit";
+export type ProjectsContextType = {
+  projects: Project[];
+  onDeleteProject: (project: Project) => Promise<void>;
+  onAddProject: (project: Project) => Promise<void>;
+  selectProject: (projects: Project | null) => void;
+  onUpdateProject: (projects: Project) => Promise<void>;
+  currentProject: Project | null;
+  currentViewMode: ProjectsViewMode;
+  openList: () => void;
+  openCreate: () => void;
+  openRead: (project: Project) => void;
+  openEdit: (project: Project) => void;
+};
+
+export type AuthButtonConfigType = {
+  title: string;
+  action: () => Promise<void>;
+  Icon: ComponentType<{ className?: string }>;
+}[];
+
+export type ModalContextType = {
+  modalConfig: ModalConfigType | null;
+  onClose: () => void;
+  onOpen: (config: ModalConfigType) => void;
+};
+
+export type ModalConfigType = {
+  size: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+  title: string;
+  content: ReactNode;
+  footer: ReactNode;
 };

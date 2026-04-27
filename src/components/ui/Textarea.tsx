@@ -3,17 +3,14 @@ import type { ComponentProps, ReactNode } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { twMerge } from "tailwind-merge";
 
-const inputStyles = cva(
-  "h-[44px] border border-gray-200 rounded-md w-full px-3",
-  {
-    variants: {
-      variant: {
-        withIcon: [],
-      },
+const inputStyles = cva("border border-gray-200 rounded-md w-full px-3", {
+  variants: {
+    variant: {
+      withIcon: [],
     },
-    // defaultVariants,
-  }
-);
+  },
+  // defaultVariants,
+});
 
 type TextareaProps = VariantProps<typeof inputStyles> &
   ComponentProps<"textarea"> & {

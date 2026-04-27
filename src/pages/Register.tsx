@@ -1,7 +1,16 @@
 import { type InputConfig, Form } from "../components/Register/Form";
-import { Lock, Mail, User } from "lucide-react";
-import type { authSwitchConfigType } from "../types/types";
+import { GithubIcon, Lock, Mail, User } from "lucide-react";
+import type {
+  AuthButtonConfigType,
+  AuthSwitchConfigType,
+} from "../types/types";
 import AuthLayout from "../components/Auth/AuthLayout";
+import { loginWithGoogle } from "../services/auth";
+import { LineSeparator } from "../components/ui/LineSeparator";
+import { Title } from "../components/ui/Title";
+import SocialAuthButtons from "../components/SocialAuthButtons";
+import { AuthSwitch } from "../components/Auth/AuthSwitch";
+import { GoogleIcon } from "../components/icons/GoogleIcon";
 
 const inputConfig: InputConfig[] = [
   {
@@ -35,22 +44,55 @@ const inputConfig: InputConfig[] = [
 ];
 
 export default function Register() {
-  const authSwitchConfigConfig: authSwitchConfigType = {
+  const authSwitchConfig: AuthSwitchConfigType = {
     className: "text-center",
     text: "Already have an account?",
     to: "/login",
     linkText: "Log In",
     variant: "primaryLink",
   };
+  async function handleGoogleAuth() {
+    try {
+      await loginWithGoogle();
+    } catch (err) {
+      console.log(err);
+      throw err;
+    }
+  }
+  async function handleGitHubAuth() {
+    try {
+      await loginWithGoogle();
+    } catch (err) {
+      console.log(err);
+      throw err;
+    }
+  }
+
+  const socialAuthConfig: AuthButtonConfigType = [
+    {
+      title: "Sign Up with Google",
+      action: handleGoogleAuth,
+      Icon: GoogleIcon,
+    },
+    {
+      title: "Sign Up with GitHub",
+      action: handleGitHubAuth,
+      Icon: GithubIcon,
+    },
+  ];
   return (
-    <AuthLayout
-      lineSeparator={true}
-      socialAuthButtons={true}
-      title="Join DevConnect"
-      description="Sign up to connect with developers, share projects, and grow your
-          network"
-      form={<Form inputConfig={inputConfig} />}
-      authSwitchConfig={authSwitchConfigConfig}
-    ></AuthLayout>
+    <AuthLayout>
+      <Title className="text-center" level={1}>
+        Join DevConnect
+      </Title>
+      <p className="text-center">
+        Sign up to connect with developers, share projects, and grow your
+        network
+      </p>
+      <Form inputConfig={inputConfig} />
+      <LineSeparator>OR</LineSeparator>
+      <SocialAuthButtons buttons={socialAuthConfig}></SocialAuthButtons>
+      <AuthSwitch config={authSwitchConfig} />
+    </AuthLayout>
   );
 }

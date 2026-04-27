@@ -1,59 +1,79 @@
 import { useEffect, useMemo, useState, type PropsWithChildren } from "react";
 import { AuthContext } from "./AuthContext";
-import { auth, db, storage } from "../lib/firebase";
-import { onAuthStateChanged } from "firebase/auth";
+import { auth, db } from "../lib/firebase";
+import { onAuthStateChanged, signOut, type Unsubscribe } from "firebase/auth";
 import {
   registerUser,
   logInUser,
-  logOutUser,
+  // logOutUser,
   resetUserPassword,
+  deleteAccount,
 } from "../services/auth";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, onSnapshot } from "firebase/firestore";
 import {
-  type AuthUpdateData,
-  type UserModel,
   type SkillsListResult,
-  type UserProfileEntity,
   type UserProfileCardEditable,
+  type UserExtendedProfile,
 } from "../types/types";
-import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+
 import {
   getSkillesList,
-  updateUserAuthDocument,
   updateUserProfileDocument,
 } from "../services/services";
 
 export function AuthProvider({ children }: PropsWithChildren) {
-  const [userEntity, setCurrentUser] = useState<UserModel | null>(null);
+  const [currentUserEntity, setcurrentUserEntity] =
+    useState<UserExtendedProfile | null>(null);
+
   const [loading, setLoading] = useState(true);
 
+  function clearUserState() {
+    setcurrentUserEntity(null);
+    setLoading(false);
+  }
+
   const signUp = async (name: string, email: string, password: string) => {
-    const user = await registerUser(name, email, password);
-    setCurrentUser(user);
-    return user;
+    try {
+      await registerUser(name, email, password);
+    } catch (err) {
+      console.log(err);
+      throw err;
+    }
   };
 
   const login = async (email: string, password: string) => {
-    const user = await logInUser(email, password);
-    setCurrentUser(user);
-    return user;
+    try {
+      await logInUser(email, password);
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
   };
 
-  const logout = () => {
-    return logOutUser();
+  const logout = async () => {
+    try {
+      await signOut(auth);
+      // return logOutUser();
+    } catch (err) {
+      console.log(err);
+      // throw error to the top level?
+    }
   };
 
-  const syncUserProfileCard = (
-    userDocData: AuthUpdateData,
-    userProfileData: UserProfileCardEditable
+  const deleteUser = async () => {
+    try {
+      await deleteAccount();
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  };
+  const syncUserProfile = (
+    userProfileData: Partial<UserProfileCardEditable>
   ) => {
-    setCurrentUser((prev) => {
+    setcurrentUserEntity((prev) => {
       if (prev) {
-        return {
-          ...prev,
-          auth: { ...prev.auth, ...userDocData },
-          profile: { ...prev.profile, ...userProfileData },
-        };
+        return { ...prev, ...userProfileData };
       } else return null;
     });
   };
@@ -64,25 +84,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
   const onUpdateUserProfile = (
     userId: string,
-    updateProps: UserProfileCardEditable
+    updateProps: Partial<UserProfileCardEditable>
   ) => {
     return updateUserProfileDocument(userId, updateProps);
-  };
-
-  const onUpdateUserAuth = (
-    auth: UserModel["auth"],
-    updateProps: AuthUpdateData
-  ) => {
-    return updateUserAuthDocument(auth, updateProps);
-  };
-
-  const uploadAvatar = async (file: File | null, userId: string) => {
-    if (!file) return null;
-    // const storage = getStorage();
-    const storageRef = ref(storage, `avatars/${userId}`);
-
-    await uploadBytes(storageRef, file);
-    return await getDownloadURL(storageRef);
   };
 
   const handleGetSkillesList = async (
@@ -95,55 +99,78 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
   const value = useMemo(
     () => ({
-      userEntity,
+      currentUserEntity,
       signUp,
       login,
       logout,
+      deleteUser,
       resetPassword,
       loading,
       onUpdateUserProfile,
-      onUpdateUserAuth,
-      syncUserProfileCard,
-      uploadAvatar,
+      syncUserProfile,
       handleGetSkillesList,
     }),
-    [userEntity, loading]
+    [currentUserEntity, loading]
   );
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        try {
-          const userRef = doc(db, "users", user.uid);
-          const userSnap = await getDoc(userRef);
-          if (userSnap.exists()) {
-            const data = userSnap.data();
-            const profile: UserProfileEntity = {
-              projects: data.projects || null,
-              profession: data.profession || null,
-              bio: data.bio || null,
-              country: data.country || null,
-              skills: data.skills || null,
+    // Auth = source of truth for session
+    // detecting login/logout
+    // loading Firestore profile
+    // building your “app user”
+    let unsubscribeProfile: Unsubscribe | null = null;
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        clearUserState();
+        return;
+      }
+
+      if (unsubscribeProfile) {
+        unsubscribeProfile();
+        unsubscribeProfile = null;
+      }
+
+      const userDocRef = doc(db, "users", user.uid);
+
+      unsubscribeProfile = onSnapshot(userDocRef, (snap) => {
+        if (!snap.exists()) {
+          setcurrentUserEntity(null);
+          setLoading(false);
+          return;
+        } else {
+          const data = snap.data();
+
+          if (data) {
+            const profile: UserExtendedProfile = {
+              githubLink: data.githubLink ?? "",
+              linkedinLink: data.linkedinLink ?? "",
+              id: data.uid ?? user.uid,
+              displayName: data.displayName ?? "",
+              photoURL: data.photoURL ?? "",
+              projects: data.projects ?? [],
+              profession: data.profession ?? "",
+              aboutMe: data.aboutMe ?? null,
+              country: data.country ?? null,
+              skills: data.skills ?? [],
+              socialLink1: data.socialLink1 ?? "",
+              socialLink2: data.socialLink2 ?? "",
+              socialLink3: data.socialLink3 ?? "",
+              websiteLink: data.websiteLink ?? "",
               joinedTs: data.joinedTs,
             };
-
-            const currentUser = {
-              auth: user,
-              profile: profile,
-            };
-            setCurrentUser(currentUser);
-            setLoading(false);
+            setcurrentUserEntity(profile);
+            // console.log(currentUserEntity);
+          } else {
+            clearUserState();
           }
-        } catch (err) {
-          console.log(err);
-          setCurrentUser(null);
+          setLoading(false);
         }
-      } else {
-        setCurrentUser(null);
-        setLoading(false);
-      }
+      });
     });
-    return unsubscribe;
+    return () => {
+      unsubscribeAuth();
+      if (unsubscribeProfile) unsubscribeProfile();
+    };
   }, []);
 
   return (

@@ -1,12 +1,13 @@
-import type { PropsWithChildren } from "react";
-// import "./lineSeparator.scss";
+import type { ReactNode } from "react";
+import { twMerge } from "tailwind-merge";
 
-// type LineSeparatorProps = {
-//   content: string;
-// };
-export function LineSeparator({ children }: PropsWithChildren) {
+type Props = {
+  children?: ReactNode;
+  className?: string;
+};
+export function LineSeparator({ children, className }: Props) {
   return (
-    <div className="relative h-[1px] bg-gray-300">
+    <div className={twMerge("relative h-[1px] bg-gray-300 w-full", className)}>
       {children && (
         <span className="absolute top-1/2 left-1/2 -translate-1/2 bg-white px-2 py-1">
           {children}

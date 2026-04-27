@@ -1,20 +1,23 @@
 import { Button } from "./ui/Button";
+import type { AuthButtonConfigType } from "../types/types";
 type Props = {
-  actions: {
-    google: () => Promise<void>;
-    gitHub: () => Promise<void>;
-  };
+  buttons: AuthButtonConfigType;
 };
-
-export default function SocialAuthButtons({ actions }: Props) {
+export default function SocialAuthButtons({ buttons }: Props) {
   return (
     <div className="flex flex-col gap-3">
-      <Button onClick={actions.google} className="w-full">
-        Sign Up with Google
-      </Button>
-      <Button onClick={actions.gitHub} className="w-full">
-        Sign Up with GitHub
-      </Button>
+      {buttons.map(({ title, action, Icon }, i) => {
+        return (
+          <Button
+            key={i}
+            onClick={action}
+            className="w-full flex items-center justify-center gap-1"
+          >
+            <Icon className="h-[20px]" />
+            {title}
+          </Button>
+        );
+      })}
     </div>
   );
 }

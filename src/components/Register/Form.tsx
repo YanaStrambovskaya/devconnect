@@ -10,6 +10,7 @@ import { Button } from "../ui/Button";
 import { useAuth } from "../../contexts/useAuth";
 import { useNavigate } from "react-router-dom";
 import FormGroup from "../ui/FormGroup";
+import { FormMessage } from "../FormMessage";
 
 export type FormState = {
   name: string;
@@ -61,10 +62,19 @@ export function Form({ inputConfig }: { inputConfig: InputConfig[] }) {
       navigate("/profile");
     } catch (err) {
       if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError("Something went wrong.");
+        if (err.message === "EMAIL_ALREADY_IN_USE") {
+          navigate("/login", {
+            state: {
+              error: "An account with this email already exists.",
+              email: formState.email,
+            },
+          });
+          return;
+        }
+        setError("Something went wrong. Try one more time later");
       }
+      console.error(err);
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -73,6 +83,17 @@ export function Form({ inputConfig }: { inputConfig: InputConfig[] }) {
   return (
     <>
       <form className="" id="registration-form" onSubmit={handleSubmit}>
+        {success && (
+          <FormMessage variant="success" className="mb-2 text-center">
+            {success}
+          </FormMessage>
+        )}
+        {error && (
+          <FormMessage variant="error" className="mb-2 text-center">
+            {error}
+          </FormMessage>
+        )}
+
         {inputConfig.map(({ name, id, type, label, icon }) => {
           return (
             <FormGroup key={id}>
@@ -97,8 +118,6 @@ export function Form({ inputConfig }: { inputConfig: InputConfig[] }) {
           {loading ? "Loading..." : "Sign Up"}
         </Button>
       </form>
-      {success ? <p>{success}</p> : ""}
-      {error ? <p>{error}</p> : ""}
     </>
   );
 }

@@ -10,7 +10,7 @@ const labelStyles = cva("text-md", {
         "absolute",
         "h-[1px] w-[1px] -m-[1px p-0 overflow-hidden border-0]",
       ],
-      default: [""],
+      default: ["mb-2 inline-block"],
     },
   },
   defaultVariants: {

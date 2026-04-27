@@ -4,26 +4,32 @@ import { DropdownList } from "../ui/DropdownList";
 type PropsType = {
   skills: Skill[];
   userSkillsIds: Set<string>;
-  handleSkillClick: (skill: Skill) => void;
+  onSkillClick: (skill: Skill) => void;
   onScroll: (e: React.UIEvent<HTMLUListElement>) => Promise<void>;
+  onClose: () => void;
+  parentRef: React.RefObject<HTMLDivElement | null>;
 };
 export function SkillsDropdown({
   skills,
   userSkillsIds,
-  handleSkillClick,
+  onSkillClick,
   onScroll,
+  onClose,
+  parentRef,
 }: PropsType) {
   return (
     <DropdownList
+      parentRef={parentRef}
+      onClose={onClose}
       onScroll={onScroll}
       items={skills}
       getKey={(skills) => skills.id}
       renderItem={(s) => (
         <div
-          onClick={() => handleSkillClick(s)}
+          onClick={() => onSkillClick(s)}
           className={`${
             userSkillsIds.has(s.id)
-              ? "eventpointer-events-none text-gray-500"
+              ? "pointer-events-none text-gray-500"
               : "cursor-pointer  hover:bg-gray-100"
           } py-3 px-3 border-b-gray-300`}
         >

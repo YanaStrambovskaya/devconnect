@@ -2,41 +2,27 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
-  updateProfile,
   signInWithPopup,
   sendPasswordResetEmail,
+  deleteUser,
 } from "firebase/auth";
-import { doc, setDoc, getDoc } from "firebase/firestore";
+import { doc, setDoc, getDoc, deleteDoc } from "firebase/firestore";
 import { auth, db, googleProvider } from "../lib/firebase";
-import type { UserModel, UserProfileEntity } from "../types/types";
-import {
-  configurateUserProfile,
-  createEmptyProfile,
-  getUserProfileById,
-} from "./helpers";
+import { createEmptyProfile } from "./helpers";
 
 export async function logInUser(
   email: string,
   password: string
-): Promise<UserModel | null> {
+): Promise<void> {
   if (!email || !password) {
     throw new Error("Email and Password are required");
   }
   try {
-    const cred = await signInWithEmailAndPassword(auth, email, password);
-
-    const profile = await getUserProfileById(cred.user.uid);
-    if (profile) {
-      return {
-        auth: cred.user,
-        profile: profile,
-      };
-    } else {
-      return null;
-    }
+    await signInWithEmailAndPassword(auth, email, password);
+    // await getUserProfileById(cred.user.uid);
   } catch (err) {
-    console.log(err);
-    return null;
+    console.error(err);
+    throw err;
   }
 }
 
@@ -45,67 +31,67 @@ export function resetUserPassword(email: string) {
 }
 
 export function logOutUser() {
-  return signOut(auth);
+  signOut(auth);
 }
 
 export async function registerUser(
   name: string,
   email: string,
   password: string
-): Promise<UserModel | null> {
-  if (!email && !password) {
+): Promise<void> {
+  if (!email || !password) {
     throw new Error("email and password are required");
   }
+
   try {
     const cred = await createUserWithEmailAndPassword(auth, email, password);
 
-    const userRef = doc(db, "users", cred.user.uid);
-    const snap = await getDoc(userRef);
+    const profile = createEmptyProfile();
 
-    if (!snap.exists()) {
-      await updateProfile(cred.user, {
-        displayName: name,
-      });
-
-      const profile = createEmptyProfile();
-
-      await setDoc(doc(db, "users", cred.user.uid), {
-        uid: cred.user.uid,
-        displayName: name,
-        email: cred.user.email,
-        photoURL: "",
-        provider: "password",
-        ...profile,
-      });
-      return {
-        auth: cred.user,
-        profile: profile,
-      };
-    } else {
-      return null;
-    }
+    await setDoc(doc(db, "users", cred.user.uid), {
+      uid: cred.user.uid,
+      displayName: name,
+      photoURL: "",
+      email: cred.user.email,
+      provider: "password",
+      ...profile,
+    });
   } catch (err) {
     if (err instanceof Error) {
-      console.log(err.message);
-      console.log(err.name);
+      if (err.message === "Firebase: Error (auth/email-already-in-use).") {
+        throw new Error("EMAIL_ALREADY_IN_USE");
+      }
     }
-    return null;
+    console.error(err);
+    throw err;
   }
 }
 
-export async function loginWithGoogle(): Promise<UserModel | null> {
+export async function deleteAccount() {
+  const user = auth.currentUser;
+  if (!user) return;
+  const uid = user.uid;
+
+  try {
+    // 1. delete Firestore data
+    await deleteDoc(doc(db, "users", uid));
+
+    // 2. delete auth user
+    await deleteUser(user);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export async function loginWithGoogle(): Promise<void> {
   try {
     const cred = await signInWithPopup(auth, googleProvider);
 
     const userRef = doc(db, "users", cred.user.uid);
-    // Create user`s link
     const snap = await getDoc(userRef);
-    // check if user already exist (“Get user document from DB”)
-    let profile: UserProfileEntity;
-    if (!snap.exists()) {
-      // if user is new
 
-      profile = createEmptyProfile();
+    if (!snap.exists()) {
+      const profile = createEmptyProfile();
 
       await setDoc(userRef, {
         uid: cred.user.uid,
@@ -115,15 +101,9 @@ export async function loginWithGoogle(): Promise<UserModel | null> {
         provider: "google",
         ...profile,
       });
-    } else {
-      profile = configurateUserProfile(snap);
     }
-    return {
-      auth: cred.user,
-      profile: profile,
-    };
   } catch (err) {
-    console.log(err);
-    return null;
+    console.error(err);
+    throw err;
   }
 }

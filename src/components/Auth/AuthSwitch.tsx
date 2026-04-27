@@ -1,23 +1,11 @@
 import { Link } from "react-router-dom";
-import { Button, buttonStyles } from "../ui/Button";
-import type { VariantProps } from "class-variance-authority";
+import { Button } from "../ui/Button";
+import type { AuthSwitchConfigType } from "../../types/types";
 
-type AuthSwitchProps = {
-  text?: string;
-  linkText: string;
-  to: string;
-  className?: string;
-  variant: VariantProps<typeof buttonStyles>["variant"];
-};
-export function AuthSwitch({
-  className = "",
-  text,
-  linkText,
-  to,
-  variant,
-}: AuthSwitchProps) {
+export function AuthSwitch({ config }: { config: AuthSwitchConfigType }) {
+  const { className, text, to, variant, linkText } = config;
   return (
-    <div className="flex justify-center gap-1">
+    <div className="flex justify-center items-center gap-1">
       {text && <p className={className}>{text}</p>}
       <Button as={Link} to={to} variant={variant}>
         {linkText}
