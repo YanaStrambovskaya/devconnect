@@ -10,8 +10,8 @@
 - 🧑‍💻 Developer profile creation and editing
 - 📂 Project showcase system
 - 📰 Activity feed (posts / updates)
-- 🔍 Search developers and skills
-- ⚡ Responsive UI for all devices
+- 🔍 Search developers and skills (Comming soon)
+- ⚡ Responsive UI for all devices (Comming Soon)
 
 ---
 
@@ -42,9 +42,7 @@
 ---
 
 ## 🚀 Live Demo
-> (Add link here after deployment)
-
----
+👉 https://devconnect-sooty.vercel.app
 
 ## 👩‍💻 Author
 

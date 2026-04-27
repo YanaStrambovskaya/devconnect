@@ -64,6 +64,7 @@ export function Form({ inputConfig }: { inputConfig: InputConfig[] }) {
                 type={type}
                 id={id}
                 name={name}
+                required
                 placeholder={`Enter you ${name}`}
                 onChange={handleOnChange}
                 value={email}

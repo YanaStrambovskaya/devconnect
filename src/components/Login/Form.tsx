@@ -38,7 +38,7 @@ export function Form({ inputConfig }: { inputConfig: InputConfig[] }) {
       console.error(err);
       if (err instanceof Error) {
         if (err.message === "Firebase: Error (auth/invalid-credential).")
-          setError("Wrong Passwor");
+          setError("Wrong Password");
       }
       throw err;
     } finally {
@@ -63,6 +63,7 @@ export function Form({ inputConfig }: { inputConfig: InputConfig[] }) {
                 type={type}
                 id={id}
                 name={name}
+                required
                 placeholder={`Enter you ${name}`}
                 onChange={handleOnChange}
                 value={formState[name]}

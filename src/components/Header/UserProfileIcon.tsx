@@ -62,7 +62,7 @@ export default function UserProfileIcon() {
             parentRef={parentRef}
             className="w-[180px] right-0 top-[40px]"
             items={items}
-            getKey={(u, i) => i}
+            getKey={(_, i) => i}
             renderItem={(u) => u}
             onClose={handleCloseDropdown}
           ></DropdownList>
