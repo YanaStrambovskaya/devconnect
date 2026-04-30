@@ -114,33 +114,43 @@ export function AuthProvider({ children }: PropsWithChildren) {
   );
 
   useEffect(() => {
-    // Auth = source of truth for session
-    // detecting login/logout
-    // loading Firestore profile
-    // building your “app user”
     let unsubscribeProfile: Unsubscribe | null = null;
-    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+
+    const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
+      // 🔴 User logged out
       if (!user) {
+        if (unsubscribeProfile) {
+          unsubscribeProfile();
+          unsubscribeProfile = null;
+        }
         clearUserState();
+        setLoading(false);
         return;
       }
 
-      if (unsubscribeProfile) {
-        unsubscribeProfile();
-        unsubscribeProfile = null;
-      }
+      try {
+        // 🟢 Ensure Firebase token is fully ready (prevents race condition)
+        await user.getIdToken();
 
-      const userDocRef = doc(db, "users", user.uid);
+        // 🟢 Clean previous listener (important for fast re-auth / StrictMode)
+        if (unsubscribeProfile) {
+          unsubscribeProfile();
+          unsubscribeProfile = null;
+        }
 
-      unsubscribeProfile = onSnapshot(userDocRef, (snap) => {
-        if (!snap.exists()) {
-          setcurrentUserEntity(null);
-          setLoading(false);
-          return;
-        } else {
-          const data = snap.data();
+        const userDocRef = doc(db, "users", user.uid);
 
-          if (data) {
+        unsubscribeProfile = onSnapshot(
+          userDocRef,
+          (snap) => {
+            if (!snap.exists()) {
+              setcurrentUserEntity(null);
+              setLoading(false);
+              return;
+            }
+
+            const data = snap.data();
+
             const profile: UserExtendedProfile = {
               githubLink: data.githubLink ?? "",
               linkedinLink: data.linkedinLink ?? "",
@@ -158,15 +168,21 @@ export function AuthProvider({ children }: PropsWithChildren) {
               websiteLink: data.websiteLink ?? "",
               joinedTs: data.joinedTs,
             };
+
             setcurrentUserEntity(profile);
-            // console.log(currentUserEntity);
-          } else {
-            clearUserState();
+            setLoading(false);
+          },
+          (error) => {
+            console.error("Firestore snapshot error:", error);
+            setLoading(false);
           }
-          setLoading(false);
-        }
-      });
+        );
+      } catch (err) {
+        console.error("Auth initialization error:", err);
+        setLoading(false);
+      }
     });
+
     return () => {
       unsubscribeAuth();
       if (unsubscribeProfile) unsubscribeProfile();
