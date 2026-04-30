@@ -62,7 +62,8 @@ export async function getSkillesList(
 export const uploadAvatar = async (file: File | null, userId: string) => {
   if (!file) return null;
   // const storage = getStorage();
-  const storageRef = ref(storage, `avatars/${userId}`);
+  const extension = file.name.split(".").pop();
+  const storageRef = ref(storage, `avatars/${userId}.${extension}`);
 
   await uploadBytes(storageRef, file);
   return await getDownloadURL(storageRef);
