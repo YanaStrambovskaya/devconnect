@@ -11,6 +11,7 @@ import { uploadAvatar } from "../../../services/services";
 import { ImageUploader } from "../ImageUploader";
 import FormControl from "../../ui/FormControl";
 import { getLetters } from "../../../utils/getLetters";
+import { auth } from "../../../lib/firebase";
 type Props = {
   onEditStop: () => void;
   userView: CurrentUserEntity;
@@ -66,6 +67,8 @@ export default function ProfileCardEdit({ onEditStop, userView }: Props) {
     setIsLoading(true);
 
     try {
+      console.log("auth user:", auth.currentUser);
+      console.log("uid:", auth.currentUser?.uid);
       const avatarRes = await uploadAvatar(profileForm.avatarFile, id);
 
       const profileData: UserProfileCardEditable = {
